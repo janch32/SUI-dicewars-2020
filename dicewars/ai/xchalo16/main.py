@@ -1,65 +1,94 @@
 import logging
 import random
+import copy
 
 from ..utils import possible_attacks, save_state
 from .utils import best_sdc_attack, is_acceptable_sdc_attack
 
 from dicewars.client.ai_driver import BattleCommand, EndTurnCommand
 from dicewars.client.game.board import Board
+from dicewars.client.game.area import Area
 
 class AI:
-    def __init__(self, player_name: int, board: Board, players_order: list[int]):
+    """GOD player agent
+
+    This agent wins everything
+    """
+
+    def __init__(self, player_name: str, board: board.Board, players_order):
+        """
+        Parameters
+        ----------
+        game : Game
+        """
+
         self.player_name = player_name
         self.players_order = players_order
         self.logger = logging.getLogger('AI')
 
-    def ai_turn(self, board: Board, nb_moves_this_turn: int, nb_turns_this_game: int, time_left: float):
-        """AI agent's turn
+        self.first_attack = True
+        self.area_of_interest = None
 
-        Get a random area. If it has a possible move, the agent will do it.
-        If there are no more moves, the agent ends its turn.
+    def search_tree(board : Board, active_area : Area):
+        """ Recursive function for tree search
         """
-        if nb_turns_this_game < 3:
-            self.logger.debug("Doing a random move")
-            attack_filter = lambda x: x
-            attack_selector = random.choice
-            attack_acceptor = lambda x: True
+        possible_targets = get_attackable(active_area, active_area.get_adjacent_areas())
+        node = True
+        paths = []
 
-            with open('debug.save', 'wb') as f:
-                save_state(f, board, self.player_name, self.players_order)
+        if active_area.get_dice() > 1:
+            for target in possible_targets:
+                # Evaluate
+                # If Evaluate not good pass
+                if False:
+                    pass
+                else:
+                    node = False
+                    # Board update
+                    n_board = simulate_attack(board, active_area, target)
+                    # Search tree with updated board
+                    r_paths = search_tree(n_board, n_board.get_area(active_area.get_name()))
 
+                    for path in r_paths:
+                        path.insert(0, active_area.get_name())
+                        paths.append(path)
+
+            return paths
+
+        if node:
+            return [ [active_area.get_name()] ]
+
+    def ai_turn(self, board: board.Board, nb_moves_this_turn, nb_turns_this_game, time_left):
+        """ GOD AI agent's turn
+
+        TODO At start get player area border area with most dices. Otherwise last used.
+
+        While there is a lucrative attack possible, the agent will do it. Otherwise it will end its turn.
+        """
+
+        start_area = None
+        focus_move = None
+
+        #TODO check for succesfull attack
+        if self.first_attack:
+            for area in board.get_player_border(self.player_name):
+                if start_area is None:
+                    start_area = copy.deepcopy(area)
+                else:
+                    if area.get_dice() > start_area.get_dice():
+                        start_area = copy.deepcopy(area)
+            self.first_attack = False
         else:
-            self.logger.debug("Doing a serious move")
-            attack_filter = lambda x: self.from_largest_region(board, x)
-            attack_selector = best_sdc_attack
-            attack_acceptor = lambda x: is_acceptable_sdc_attack(x)
+            start_area = self.area_of_interest
 
-            with open('debug.save', 'wb') as f:
-                save_state(f, board, self.player_name, self.players_order)
+        paths = search_tree(board, start_area)
 
-        all_moves = list(possible_attacks(board, self.player_name))
-        if not all_moves:
-            self.logger.debug("There are no moves possible at all")
+        if not paths:
+            self.first_attack = True
             return EndTurnCommand()
 
-        moves_of_interest = attack_filter(all_moves)
-        if not moves_of_interest:
-            self.logger.debug("There are no moves of interest")
-            return EndTurnCommand()
+        #Evaluate all paths, find the best one
+        #area_of_interest = targeted area
+        #Battle Command with first area of best path
 
-        the_move = attack_selector(moves_of_interest)
 
-        if attack_acceptor(the_move):
-            return BattleCommand(the_move[0].get_name(), the_move[1].get_name())
-        else:
-            self.logger.debug("The move {} is not acceptable, ending turn".format(the_move))
-            return EndTurnCommand()
-
-    def from_largest_region(self, board, attacks):
-        players_regions = board.get_players_regions(self.player_name)
-        max_region_size = max(len(region) for region in players_regions)
-        max_sized_regions = [region for region in players_regions if len(region) == max_region_size]
-
-        the_largest_region = max_sized_regions[0]
-        self.logger.debug('The largest region: {}'.format(the_largest_region))
-        return [attack for attack in attacks if attack[0].get_name() in the_largest_region]
