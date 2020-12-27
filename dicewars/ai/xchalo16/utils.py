@@ -17,8 +17,8 @@ def SimulateAttack(board: Board, attackerName: int, defenderName: int) -> Board:
 
     newAttacker: Area = newBoard.get_area(attackerName)
     newDefender: Area = newBoard.get_area(defenderName)
-    newDefender.set_owner(newAttacker.get_owner_name)
-    newDefender.set_dice(newAttacker.get_dice - 1)
+    newDefender.set_owner(newAttacker.get_owner_name())
+    newDefender.set_dice(newAttacker.get_dice() - 1)
     newAttacker.set_dice(1)
     return newBoard
 
