@@ -8,9 +8,9 @@ from dicewars.client.ai_driver import BattleCommand, EndTurnCommand
 from dicewars.client.game import board
 
 class AI:
-    """Naive player agent
+    """GOD player agent
 
-    This agent performs all possible moves in random order
+    This agent wins everything
     """
 
     def __init__(self, player_name: str, board: board.Board, players_order):
@@ -23,53 +23,53 @@ class AI:
         self.players_order = players_order
         self.logger = logging.getLogger('AI')
 
-    def ai_turn(self, board: board.Board, nb_moves_this_turn, nb_turns_this_game, time_left):
-        """AI agent's turn
+        self.first_attack = True
+        self.area_of_interest = None
 
-        Get a random area. If it has a possible move, the agent will do it.
-        If there are no more moves, the agent ends its turn.
+    def get_attackable(active_area, neighbours):
+        attackable = []
+        for nb in neighbours:
+            if active_area.get_owner_name() != nb.get_owner_name():
+                attackable.append(nb)
+
+        return attackable
+
+    def search_tree(board, active_area, player):
+        """ Recursive function for tree search
         """
-        if nb_turns_this_game < 3:
-            self.logger.debug("Doing a random move")
-            attack_filter = lambda x: x
-            attack_selector = random.choice
-            attack_acceptor = lambda x: True
+        possible_moves = get_attackable(active_area, active_area.get_adjacent_areas())
 
-            with open('debug.save', 'wb') as f:
-                save_state(f, board, self.player_name, self.players_order)
+        for move in possible_moves:
+            # Board update
+            # Search tree with updated board
 
+    def ai_turn(self, board: board.Board, nb_moves_this_turn, nb_turns_this_game, time_left):
+        """ GOD AI agent's turn
+
+        TODO At start get player area border area with most dices. Otherwise last used.
+
+        While there is a lucrative attack possible, the agent will do it. Otherwise it will end its turn.
+        """
+
+        start_area = None
+        focus_move = None
+        best_move_heuristic = 0
+
+        if self.first_attack:
+            for area in board.get_player_border(self.player_name):
+                if start_area is None:
+                    start_area = area
+                else:
+                    if area.get_dice() > start_area.get_dice():
+                        start_area = area
+            self.first_attack = False
         else:
-            self.logger.debug("Doing a serious move")
-            attack_filter = lambda x: self.from_largest_region(board, x)
-            attack_selector = best_sdc_attack
-            attack_acceptor = lambda x: is_acceptable_sdc_attack(x)
+            start_area = self.area_of_interest
 
-            with open('debug.save', 'wb') as f:
-                save_state(f, board, self.player_name, self.players_order)
+        moves = get_attackable(start_area, start_area.get_adjacent_areas())
 
-        all_moves = list(possible_attacks(board, self.player_name))
-        if not all_moves:
-            self.logger.debug("There are no moves possible at all")
-            return EndTurnCommand()
+        for move in moves:
+                # Evaluate state
+                # Make new path
+                # Call recursive function
 
-        moves_of_interest = attack_filter(all_moves)
-        if not moves_of_interest:
-            self.logger.debug("There are no moves of interest")
-            return EndTurnCommand()
-
-        the_move = attack_selector(moves_of_interest)
-
-        if attack_acceptor(the_move):
-            return BattleCommand(the_move[0].get_name(), the_move[1].get_name())
-        else:
-            self.logger.debug("The move {} is not acceptable, ending turn".format(the_move))
-            return EndTurnCommand()
-
-    def from_largest_region(self, board, attacks):
-        players_regions = board.get_players_regions(self.player_name)
-        max_region_size = max(len(region) for region in players_regions)
-        max_sized_regions = [region for region in players_regions if len(region) == max_region_size]
-
-        the_largest_region = max_sized_regions[0]
-        self.logger.debug('The largest region: {}'.format(the_largest_region))
-        return [attack for attack in attacks if attack[0].get_name() in the_largest_region]
