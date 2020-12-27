@@ -1,6 +1,29 @@
 import copy
+from .simulatebattle import SimulateBattle
 from dicewars.client.game.board import Board
 from dicewars.client.game.area import Area
+from dicewars.client.game.game import Game
+from ..utils import attack_succcess_probability
+
+def battle_heuristic(board: Board, attacker: Area, target: Area) -> float:
+    """
+    x = (pocet_poli_hlavniho_uzemi - napadnutelna_pole - neprimo_napadnutelna_pole)
+    h = pravdepodobnost(uspech) * x(uspech) - pravdepodobnost(prohra) * x(prohra)
+    """
+
+    succ_probability = attack_succcess_probability(attacker.get_dice(), target.get_dice())
+
+    # Úspěch útoku
+    with SimulateBattle(attacker, target, success=True):
+        succ_coef = 1
+
+    # Neúspěch útoku
+    with SimulateBattle(attacker, target, success=False):
+        fail_coef = 1
+
+    return (succ_coef * succ_probability) - (fail_coef * (1 - succ_probability))
+
+
 
 def simulate_attack(board: Board, attacker: Area, target: Area) -> Board:
     """Simuluje útok se 100% úspěšností a vrátí nový stav hracího pole
