@@ -24,10 +24,11 @@ def simulate_attack(board: Board, attacker: Area, target: Area) -> Board:
 
     return new_board
 
-def get_attackable(active_area : Area, neighbours):
+def get_attackable(board: Board, active_area : Area, neighbours):
         attackable = []
         for nb in neighbours:
-            if active_area.get_owner_name() != nb.get_owner_name():
+            a = board.get_area(nb)
+            if active_area.get_owner_name() != a.get_owner_name():
                 attackable.append(nb)
 
         return attackable

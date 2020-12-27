@@ -3,7 +3,7 @@ import random
 import copy
 
 from ..utils import possible_attacks, save_state
-from .utils import best_sdc_attack, is_acceptable_sdc_attack
+from .utils import get_attackable, simulate_attack
 
 from dicewars.client.ai_driver import BattleCommand, EndTurnCommand
 from dicewars.client.game.board import Board
@@ -15,7 +15,7 @@ class AI:
     This agent wins everything
     """
 
-    def __init__(self, player_name: str, board: board.Board, players_order):
+    def __init__(self, player_name: str, board: Board, players_order):
         """
         Parameters
         ----------
@@ -29,10 +29,10 @@ class AI:
         self.first_attack = True
         self.area_of_interest = None
 
-    def search_tree(board : Board, active_area : Area):
+    def search_tree(self, board : Board, active_area : Area):
         """ Recursive function for tree search
         """
-        possible_targets = get_attackable(active_area, active_area.get_adjacent_areas())
+        possible_targets = get_attackable(board, active_area, active_area.get_adjacent_areas())
         node = True
         paths = []
 
@@ -47,7 +47,7 @@ class AI:
                     # Board update
                     n_board = simulate_attack(board, active_area, target)
                     # Search tree with updated board
-                    r_paths = search_tree(n_board, n_board.get_area(active_area.get_name()))
+                    r_paths = self.search_tree(n_board, n_board.get_area(active_area.get_name()))
 
                     for path in r_paths:
                         path.insert(0, active_area.get_name())
@@ -58,7 +58,7 @@ class AI:
         if node:
             return [ [active_area.get_name()] ]
 
-    def ai_turn(self, board: board.Board, nb_moves_this_turn, nb_turns_this_game, time_left):
+    def ai_turn(self, board: Board, nb_moves_this_turn, nb_turns_this_game, time_left):
         """ GOD AI agent's turn
 
         TODO At start get player area border area with most dices. Otherwise last used.
@@ -81,7 +81,8 @@ class AI:
         else:
             start_area = self.area_of_interest
 
-        paths = search_tree(board, start_area)
+        paths = self.search_tree(board, start_area)
+        print(paths)
 
         if not paths:
             self.first_attack = True
