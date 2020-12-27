@@ -2,7 +2,7 @@ import copy
 from dicewars.client.game.board import Board
 from dicewars.client.game.area import Area
 
-def SimulateAttack(board: Board, attackerName: int, defenderName: int) -> Board:
+def simulateAttack(board: Board, attackerName: int, defenderName: int) -> Board:
     """Simuluje útok se 100% úspěšností a vrátí nový stav hracího pole
 
     Args:
