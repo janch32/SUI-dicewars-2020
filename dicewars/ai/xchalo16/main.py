@@ -1,11 +1,13 @@
 import logging
 import random
+import copy
 
 from ..utils import possible_attacks, save_state
 from .utils import best_sdc_attack, is_acceptable_sdc_attack
 
 from dicewars.client.ai_driver import BattleCommand, EndTurnCommand
 from dicewars.client.game.board import Board
+from dicewars.client.game.area import Area
 
 class AI:
     """GOD player agent
@@ -27,22 +29,34 @@ class AI:
         self.first_attack = True
         self.area_of_interest = None
 
-    def get_attackable(active_area, neighbours):
-        attackable = []
-        for nb in neighbours:
-            if active_area.get_owner_name() != nb.get_owner_name():
-                attackable.append(nb)
-
-        return attackable
-
-    def search_tree(board, active_area, player):
+    def search_tree(board : Board, active_area : Area):
         """ Recursive function for tree search
         """
-        possible_moves = get_attackable(active_area, active_area.get_adjacent_areas())
+        possible_targets = get_attackable(active_area, active_area.get_adjacent_areas())
+        node = True
+        paths = []
 
-        for move in possible_moves:
-            # Board update
-            # Search tree with updated board
+        if active_area.get_dice() > 1:
+            for target in possible_targets:
+                # Evaluate
+                # If Evaluate not good pass
+                if False:
+                    pass
+                else:
+                    node = False
+                    # Board update
+                    n_board = simulate_attack(board, active_area, target)
+                    # Search tree with updated board
+                    r_paths = search_tree(n_board, n_board.get_area(active_area.get_name()))
+
+                    for path in r_paths:
+                        path.insert(0, active_area.get_name())
+                        paths.append(path)
+
+            return paths
+
+        if node:
+            return [ [active_area.get_name()] ]
 
     def ai_turn(self, board: board.Board, nb_moves_this_turn, nb_turns_this_game, time_left):
         """ GOD AI agent's turn
@@ -54,23 +68,27 @@ class AI:
 
         start_area = None
         focus_move = None
-        best_move_heuristic = 0
 
+        #TODO check for succesfull attack
         if self.first_attack:
             for area in board.get_player_border(self.player_name):
                 if start_area is None:
-                    start_area = area
+                    start_area = copy.deepcopy(area)
                 else:
                     if area.get_dice() > start_area.get_dice():
-                        start_area = area
+                        start_area = copy.deepcopy(area)
             self.first_attack = False
         else:
             start_area = self.area_of_interest
 
-        moves = get_attackable(start_area, start_area.get_adjacent_areas())
+        paths = search_tree(board, start_area)
 
-        for move in moves:
-                # Evaluate state
-                # Make new path
-                # Call recursive function
+        if not paths:
+            self.first_attack = True
+            return EndTurnCommand()
+
+        #Evaluate all paths, find the best one
+        #area_of_interest = targeted area
+        #Battle Command with first area of best path
+
 
