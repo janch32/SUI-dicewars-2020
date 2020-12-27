@@ -5,25 +5,15 @@ from ..utils import possible_attacks, save_state
 from .utils import best_sdc_attack, is_acceptable_sdc_attack
 
 from dicewars.client.ai_driver import BattleCommand, EndTurnCommand
-from dicewars.client.game import board
+from dicewars.client.game.board import Board
 
 class AI:
-    """Naive player agent
-
-    This agent performs all possible moves in random order
-    """
-
-    def __init__(self, player_name: str, board: board.Board, players_order):
-        """
-        Parameters
-        ----------
-        game : Game
-        """
+    def __init__(self, player_name: int, board: Board, players_order: list[int]):
         self.player_name = player_name
         self.players_order = players_order
         self.logger = logging.getLogger('AI')
 
-    def ai_turn(self, board: board.Board, nb_moves_this_turn, nb_turns_this_game, time_left):
+    def ai_turn(self, board: Board, nb_moves_this_turn: int, nb_turns_this_game: int, time_left: float):
         """AI agent's turn
 
         Get a random area. If it has a possible move, the agent will do it.
