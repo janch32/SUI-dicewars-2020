@@ -82,7 +82,6 @@ class AI:
             start_area = self.area_of_interest
 
         paths = self.search_tree(board, start_area)
-        print(paths)
 
         if not paths:
             self.first_attack = True
