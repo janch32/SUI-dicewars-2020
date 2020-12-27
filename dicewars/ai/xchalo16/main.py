@@ -5,7 +5,7 @@ from ..utils import possible_attacks, save_state
 from .utils import best_sdc_attack, is_acceptable_sdc_attack
 
 from dicewars.client.ai_driver import BattleCommand, EndTurnCommand
-from dicewars.client.game import board
+from dicewars.client.game.board import Board
 
 class AI:
     """GOD player agent
@@ -19,6 +19,7 @@ class AI:
         ----------
         game : Game
         """
+
         self.player_name = player_name
         self.players_order = players_order
         self.logger = logging.getLogger('AI')
