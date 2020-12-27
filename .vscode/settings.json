@@ -1,0 +1,9 @@
+{
+	"files.exclude": {
+		"**/__pycache__": true
+	},
+	"files.trimTrailingWhitespace": true,
+	"files.insertFinalNewline": true,
+	"editor.detectIndentation": true,
+	"editor.insertSpaces": true
+}
