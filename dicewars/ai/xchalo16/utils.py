@@ -2,23 +2,23 @@ import copy
 from dicewars.client.game.board import Board
 from dicewars.client.game.area import Area
 
-def simulateAttack(board: Board, attackerName: int, defenderName: int) -> Board:
+def simulateAttack(board: Board, attacker: Area, target: Area) -> Board:
     """Simuluje útok se 100% úspěšností a vrátí nový stav hracího pole
 
     Args:
         board (Board): Aktuální stav hracího pole
-        attacker (int): Název políčka ze kterého se útočí
-        defender (int): Název políčka na které se útočí
+        attacker (Area): Název políčka ze kterého se útočí
+        target (Area): Název políčka na které se útočí
 
     Returns:
         Board: Nový stav hracího pole (jako deepcopy)
     """
     newBoard = copy.deepcopy(board)
 
-    newAttacker: Area = newBoard.get_area(attackerName)
-    newDefender: Area = newBoard.get_area(defenderName)
-    newDefender.set_owner(newAttacker.get_owner_name())
-    newDefender.set_dice(newAttacker.get_dice() - 1)
+    newAttacker: Area = newBoard.get_area(attacker.name)
+    newTarget: Area = newBoard.get_area(target.name)
+    newTarget.set_owner(newAttacker.get_owner_name())
+    newTarget.set_dice(newAttacker.get_dice() - 1)
     newAttacker.set_dice(1)
     return newBoard
 
