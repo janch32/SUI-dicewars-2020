@@ -1,9 +1,8 @@
 import logging
 import copy
 
-from ..utils import possible_attacks, save_state
-from .utils import battle_heuristic, get_attackable, path_heuristics
-from .simulatebattle import simulate_battle
+from ..utils import save_state
+from .utils import battle_heuristic, get_attackable, path_heuristics, simulate_battle
 
 from typing import List
 

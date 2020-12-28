@@ -5,5 +5,8 @@
 	"files.trimTrailingWhitespace": true,
 	"files.insertFinalNewline": true,
 	"editor.detectIndentation": true,
-	"editor.insertSpaces": true
+	"editor.insertSpaces": true,
+	"cSpell.words": [
+		"succcess"
+	]
 }
