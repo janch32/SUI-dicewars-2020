@@ -23,6 +23,8 @@ class AI:
         self.logger = logging.getLogger('AI')
         self.first_attack = True
         self.area_of_interest = None
+        self.path_of_interest = None
+        self.start_turn = True #TODO DEBUGGING ONLY
 
     def search_tree(self, board : Board, active_area : Area):
 
@@ -37,9 +39,10 @@ class AI:
                 # Evaluate
                 # If Evaluate not good pass
                 h = battle_heuristic(board, active_area, target)
+                #TODO DEBUG
                 self.logger.info("Active: {} Target: {} Heuristics: {}".format(active_area.get_name(), target.get_name(), h))
                 #TODO
-                if h <= -3:
+                if h <= -5:
                     pass
                 else:
                     node = False
@@ -69,17 +72,28 @@ class AI:
         focus_area = None
         best_heuristics = -1000
 
-        with open('debug.save', 'wb') as f:
-                save_state(f, board, self.player_name, self.players_order)
+        if self.start_turn:
+            self.start_turn = False
+            with open('debugxchalo16.save', 'wb') as f:
+                    save_state(f, board, self.player_name, self.players_order)
 
-        #TODO DEBUG
         a = [ar.get_name() for ar in board.get_player_border(self.player_name)]
-        self.logger.info("Areas: {}".format(a))
+        all_a = [ar.get_name() for ar in board.get_player_areas(self.player_name)]
+        #TODO DEBUG
+        self.logger.info("Border Areas: {}".format(a))
 
-        #TODO check for succesfull attack
-        if self.area_of_interest not in a:
+        if self.path_of_interest is not None and len(self.path_of_interest) <= 1:
             self.first_attack = True
 
+        if self.area_of_interest is not None and self.area_of_interest.get_name() not in all_a:
+            self.first_attack = True
+
+        if not a:
+            self.start_turn = True
+            self.first_attack = True
+            return EndTurnCommand()
+
+        self.logger.info("First Turn: {}".format(self.first_attack))
         if self.first_attack:
             for area in board.get_player_border(self.player_name):
                 if start_area is None:
@@ -88,37 +102,47 @@ class AI:
                     if area.get_dice() > start_area.get_dice():
                         start_area = copy.deepcopy(area)
             self.first_attack = False
+
+            #TODO DEBUG
+            self.logger.info("Starting area: {}".format(start_area.get_name()))
+
+            paths = self.search_tree(board, start_area)
+
+            if not paths:
+                self.first_attack = True
+                self.start_turn = True
+                return EndTurnCommand()
+
+            #TODO DEBUG
+            self.logger.info(paths)
+
+            for path in paths:
+                if len(path) > 1:
+                    p_h = path_heuristics(board, path)
+                    #TODO DEBUG
+                    self.logger.info("Evaluate attack to: {} with h={}".format(path[1],p_h))
+                    if p_h > best_heuristics:
+                        focus_area = path[1]
+                        best_heuristics = p_h
+                        self.path_of_interest = path[1:]
         else:
             start_area = self.area_of_interest
-
-        #TODO DEBUG
-        self.logger.info("Starting area: {}".format(start_area.get_name()))
-
-        paths = self.search_tree(board, start_area)
-
-        if not paths:
-            self.first_attack = True
-            return EndTurnCommand()
-
-        #TODO DEBUG
-        self.logger.info(paths)
-
-        for path in paths:
-            if len(path) > 1:
-                p_h = path_heuristics(board, path)
-                #TODO DEBUG
-                self.logger.info("Evaluate attack to: {} with h={}".format(path[1],p_h))
-                if p_h > best_heuristics:
-                    focus_area = path[1]
-                    best_heuristics = p_h
+            focus_area = self.path_of_interest[1]
+            self.path_of_interest = self.path_of_interest[1:]
+            #TODO DEBUG
+            self.logger.info("Will go on to path: {}".format(self.path_of_interest))
 
         #TODO DEBUG
         self.logger.info("Attack to: {}".format(focus_area))
 
         if focus_area is None:
+            self.start_turn = True
+            self.first_attack = True
             return EndTurnCommand()
 
         self.area_of_interest = board.get_area(focus_area)
+        #TODO DEBUG
+        self.logger.info("AOI: {}".format(self.area_of_interest.get_name()))
 
         return BattleCommand(start_area.get_name(), focus_area)
 

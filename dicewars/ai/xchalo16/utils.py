@@ -82,7 +82,7 @@ def battle_heuristic(board: Board, attacker: Area, target: Area) -> float:
         fail_coef = player_heuristic(board, attacker.get_owner_name())
 
     succ_prob = attack_succcess_probability(attacker.get_dice(), target.get_dice())
-    return (succ_prob * succ_coef) - ((1 - succ_prob) * fail_coef)
+    return (succ_prob * succ_coef) - (2 * (1 - succ_prob) * fail_coef)
 
 def path_heuristics(board: Board, path: list) -> float:
     """
