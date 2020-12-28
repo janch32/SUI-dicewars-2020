@@ -1,11 +1,9 @@
-import copy
-import logging
-from .simulatebattle import SimulateBattle
+from .simulatebattle import simulate_battle
 from dicewars.client.game.board import Board
 from dicewars.client.game.area import Area
 from ..utils import attack_succcess_probability
 
-def heuristic_coefficient(board: Board, player_name: int) -> int:
+def battle_heuristic_coefficient(board: Board, player_name: int) -> int:
     """
     koeficient = (počet_polí_hlavního_území - napadnutelná_pole - nepřímo_napadnutelná_pole)
     """
@@ -37,38 +35,14 @@ def battle_heuristic(board: Board, attacker: Area, target: Area) -> float:
     heuristika = pst_úspěchu * koeficient(úspěch) - pst_prohry * koeficient(prohra)
     """
 
-    with SimulateBattle(attacker, target, success=True):
-        succ_coef = heuristic_coefficient(board, attacker.get_owner_name())
+    with simulate_battle(attacker, target, success=True):
+        succ_coef = battle_heuristic_coefficient(board, attacker.get_owner_name())
 
-    with SimulateBattle(attacker, target, success=False):
-        fail_coef = heuristic_coefficient(board, attacker.get_owner_name())
+    with simulate_battle(attacker, target, success=False):
+        fail_coef = battle_heuristic_coefficient(board, attacker.get_owner_name())
 
     succ_prob = attack_succcess_probability(attacker.get_dice(), target.get_dice())
-    return (succ_coef * succ_prob) - (fail_coef * (1 - succ_prob))
-
-
-# Místo toho použij SimulateBattle z modulu .simulatebattle
-#def simulate_attack(board: Board, attacker: Area, target: Area) -> Board:
-#    """Simuluje útok se 100% úspěšností a vrátí nový stav hracího pole
-#
-#    Args:
-#        board (Board): Aktuální stav hracího pole
-#        attacker (Area): Název políčka ze kterého se útočí
-#        target (Area): Název políčka na které se útočí
-#
-#    Returns:
-#        Board: Nový stav hracího pole (jako deepcopy)
-#    """
-#    new_board = copy.deepcopy(board)
-#
-#    new_attacker: Area = new_board.get_area(attacker.name)
-#    new_target: Area = new_board.get_area(target.name)
-#
-#    new_target.set_owner(new_attacker.get_owner_name())
-#    new_target.set_dice(new_attacker.get_dice() - 1)
-#    new_attacker.set_dice(1)
-
-    return new_board
+    return (succ_prob * succ_coef) - ((1 - succ_prob) * fail_coef)
 
 def get_attackable(board: Board, active_area: Area):
         neighbors = active_area.get_adjacent_areas()

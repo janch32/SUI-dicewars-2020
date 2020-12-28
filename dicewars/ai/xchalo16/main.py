@@ -1,15 +1,15 @@
 import logging
 import copy
 
-from ..utils import possible_attacks, save_state
-from .utils import battle_heuristic, get_attackable, simulate_attack
+from ..utils import possible_attacks
+from .utils import battle_heuristic, get_attackable
+from .simulatebattle import simulate_battle
 
 from typing import List
 
 from dicewars.client.ai_driver import BattleCommand, EndTurnCommand
 from dicewars.client.game.board import Board
 from dicewars.client.game.area import Area
-from .utils import simulate_attack, get_attackable
 
 class AI:
     """GOD player agent
@@ -41,10 +41,9 @@ class AI:
                     pass
                 else:
                     node = False
-                    # Board update
-                    n_board = simulate_attack(board, active_area, target)
-                    # Search tree with updated board
-                    r_paths = self.search_tree(n_board, n_board.get_area(active_area.get_name()))
+                    with simulate_battle(active_area, target):
+                        # Search tree with updated board
+                        r_paths = self.search_tree(board, board.get_area(active_area.get_name()))
 
                     for path in r_paths:
                         path.insert(0, active_area.get_name())
@@ -64,6 +63,7 @@ class AI:
         While there is a lucrative attack possible, the agent will do it. Otherwise it will end its turn.
         """
 
+        # TODO jen test, potom můžeš smazat až po první return
         for attack in possible_attacks(board, self.player_name):
             self.logger.info("battle {}({})->{}({}) \theuristic: {}".format(
                 attack[0].get_name(),
