@@ -43,7 +43,7 @@ class AI:
                 #TODO DEBUG
                 self.logger.info("Active: {} Target: {} Heuristics: {}".format(active_area.get_name(), target.get_name(), h))
                 #TODO
-                if h <= -3:
+                if h <= -5:
                     pass
                 else:
                     node = False
