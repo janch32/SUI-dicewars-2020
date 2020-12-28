@@ -44,6 +44,20 @@ def battle_heuristic(board: Board, attacker: Area, target: Area) -> float:
     succ_prob = attack_succcess_probability(attacker.get_dice(), target.get_dice())
     return (succ_prob * succ_coef) - ((1 - succ_prob) * fail_coef)
 
+def path_heuristics(board: Board, path: list) -> float:
+    """
+        Heuristika = součet všech dílčích heuristik v cestě
+    """
+    if len(path) < 2:
+        return 0
+
+    with simulate_battle(board.get_area(path[0]), board.get_area(path[1])):
+        h = path_heuristics(board, path[1:])
+
+    h += battle_heuristic(board, board.get_area(path[0]), board.get_area(path[1]))
+
+    return h
+
 def get_attackable(board: Board, active_area: Area):
         neighbors = active_area.get_adjacent_areas()
         attackable = []

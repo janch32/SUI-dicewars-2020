@@ -1,8 +1,8 @@
 import logging
 import copy
 
-from ..utils import possible_attacks
-from .utils import battle_heuristic, get_attackable
+from ..utils import possible_attacks, save_state
+from .utils import battle_heuristic, get_attackable, path_heuristics
 from .simulatebattle import simulate_battle
 
 from typing import List
@@ -37,22 +37,25 @@ class AI:
             for target in possible_targets:
                 # Evaluate
                 # If Evaluate not good pass
-                if False:
+                h = battle_heuristic(board, active_area, target)
+                self.logger.info("Active: {} Target: {} Heuristics: {}".format(active_area.get_name(), target.get_name(), h))
+                #TODO
+                if h <= -3:
                     pass
                 else:
                     node = False
                     with simulate_battle(active_area, target):
                         # Search tree with updated board
-                        r_paths = self.search_tree(board, board.get_area(active_area.get_name()))
+                        r_paths = self.search_tree(board, board.get_area(target.get_name()))
 
                     for path in r_paths:
                         path.insert(0, active_area.get_name())
                         paths.append(path)
 
-            return paths
-
         if node:
             return [ [active_area.get_name()] ]
+
+        return paths
 
 
     def ai_turn(self, board: Board, nb_moves_this_turn: int, nb_turns_this_game: int, time_left: float):
@@ -63,20 +66,21 @@ class AI:
         While there is a lucrative attack possible, the agent will do it. Otherwise it will end its turn.
         """
 
-        # TODO jen test, potom můžeš smazat až po první return
-        for attack in possible_attacks(board, self.player_name):
-            self.logger.info("battle {}({})->{}({}) \theuristic: {}".format(
-                attack[0].get_name(),
-                attack[0].get_dice(),
-                attack[1].get_name(),
-                attack[1].get_dice(),
-                battle_heuristic(board, attack[0], attack[1])))
-
-        return EndTurnCommand()
         start_area = None
-        focus_move = None
+        focus_area = None
+        best_heuristics = -1000
+
+        with open('debug.save', 'wb') as f:
+                save_state(f, board, self.player_name, self.players_order)
+
+        #TODO DEBUG
+        a = [ar.get_name() for ar in board.get_player_border(self.player_name)]
+        self.logger.info("Areas: {}".format(a))
 
         #TODO check for succesfull attack
+        if self.area_of_interest not in a:
+            self.first_attack = True
+
         if self.first_attack:
             for area in board.get_player_border(self.player_name):
                 if start_area is None:
@@ -88,17 +92,36 @@ class AI:
         else:
             start_area = self.area_of_interest
 
+        #TODO DEBUG
+        self.logger.info("Starting area: {}".format(start_area.get_name()))
+
         paths = self.search_tree(board, start_area)
 
         if not paths:
             self.first_attack = True
             return EndTurnCommand()
 
-        #TODO tempfix aby se zabránilo poslání žádnýho příkazu
-        return EndTurnCommand()
+        #TODO DEBUG
+        self.logger.info(paths)
 
-        #Evaluate all paths, find the best one
-        #area_of_interest = targeted area
-        #Battle Command with first area of best path
+        for path in paths:
+            if len(path) > 1:
+                p_h = path_heuristics(board, path)
+                #TODO DEBUG
+                self.logger.info("Evaluate attack to: {} with h={}".format(path[1],p_h))
+                if p_h > best_heuristics:
+                    focus_area = path[1]
+                    best_heuristics = p_h
+
+        #TODO DEBUG
+        self.logger.info("Attack to: {}".format(focus_area))
+
+        if focus_area is None:
+            return EndTurnCommand()
+
+        self.area_of_interest = board.get_area(focus_area)
+
+        return BattleCommand(start_area.get_name(), focus_area)
+
 
 
