@@ -2,7 +2,7 @@ import logging
 import copy
 
 from ..utils import possible_attacks, save_state
-from .utils import get_attackable, simulate_attack
+from .utils import battle_heuristic, get_attackable, simulate_attack
 
 from typing import List
 
@@ -29,7 +29,7 @@ class AI:
 
         """ Recursive function for tree search
         """
-        possible_targets = get_attackable(board, active_area, active_area.get_adjacent_areas())
+        possible_targets = get_attackable(board, active_area)
         node = True
         paths = []
 
@@ -64,6 +64,15 @@ class AI:
         While there is a lucrative attack possible, the agent will do it. Otherwise it will end its turn.
         """
 
+        for attack in possible_attacks(board, self.player_name):
+            self.logger.info("battle {}({})->{}({}) \theuristic: {}".format(
+                attack[0].get_name(),
+                attack[0].get_dice(),
+                attack[1].get_name(),
+                attack[1].get_dice(),
+                battle_heuristic(board, attack[0], attack[1])))
+
+        return EndTurnCommand()
         start_area = None
         focus_move = None
 
@@ -84,6 +93,9 @@ class AI:
         if not paths:
             self.first_attack = True
             return EndTurnCommand()
+
+        #TODO tempfix aby se zabránilo poslání žádnýho příkazu
+        return EndTurnCommand()
 
         #Evaluate all paths, find the best one
         #area_of_interest = targeted area
