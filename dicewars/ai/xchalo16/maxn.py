@@ -71,7 +71,7 @@ class MaxN:
         # tah s nejlepším skóre pro tohoto hráče
         for _, attacker, target in attacks:
             with simulate_battle(attacker, target):
-                new_scores = self.make_turn(board, (player_index+1) % self.players, depth+1)
+                new_scores = self.__make_turn(board, (player_index+1) % self.players, depth+1)
                 if new_scores[player_index] >= scores[player_index]:
                     scores = new_scores
                     if depth == 0:
