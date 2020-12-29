@@ -1,3 +1,4 @@
+import logging
 from ..utils import possible_attacks
 from .utils import add_dices_to_player, battle_heuristic, player_heuristic, simulate_battle
 from typing import List, Tuple, Union
@@ -8,7 +9,7 @@ class MaxN:
     """MiniMax implemenetace pro hru více hráčů (Max^n)
     """
 
-    def __init__(self, players_order: List[int], depth_limit=-1):
+    def __init__(self, players_order: List[int], player: int, depth_limit=-1):
         """MiniMax implemenetace pro hru více hráčů (Max^n)
 
         Args
@@ -22,6 +23,8 @@ class MaxN:
         self.players_order = players_order
         self.players = len(players_order)
         self.depth_limit = self.players if depth_limit < 0 else depth_limit
+        self.is_yourself = player
+        self.logger = logging.getLogger('AI')
 
     def __make_turn(self, board: Board, pl_index: int, depth=0) -> List[float]:
         """Provede jedno větvení MiniMax algoritmu
@@ -63,7 +66,7 @@ class MaxN:
         # tah s nejlepším skóre pro tohoto hráče
         for battle_coef, attacker, target in attacks:
             with simulate_battle(attacker, target):
-                with add_dices_to_player(board, player):
+                with add_dices_to_player(board, player, (self.is_yourself == player), self.logger):
                     new_scores = self.__make_turn(board, (pl_index+1) % self.players, depth+1)
                     # Pokud se skóre rovná, tah je dobrý, pokud ostatní hráči mají skóre nižší
                     if (new_scores[pl_index] == scores[pl_index]) and (sum(new_scores) > sum(scores)):

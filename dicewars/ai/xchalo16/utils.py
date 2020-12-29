@@ -1,3 +1,4 @@
+from logging import log
 import random
 from typing import Dict, List
 from dicewars.client.game.board import Board
@@ -94,29 +95,61 @@ def battle_heuristic(board: Board, attacker: Area, target: Area) -> float:
 
 
 @contextmanager
-def add_dices_to_player(board: Board, player_name: int):
+def add_dices_to_player(board: Board, player_name: int, is_yourself: bool, logger):
     affected_areas: Dict[int, int] = {}
     dice = 0
     regions = board.get_players_regions(player_name)
     for region in regions:
         dice = max(dice, len(region))
 
-    areas: List[Area] = []
-    for area in board.get_player_areas(player_name):
-        areas.append(area)
+    if is_yourself:
+        areas = board.get_player_areas(player_name)
+        b_a = board.get_player_border(player_name)
+        areas = list(set(areas)-set(b_a))
+        if areas is None:
+            areas = b_a
+    else:
+        areas =  board.get_player_border(player_name)
+
+    arr = [a.get_name() for a in areas]
+    logger.info("PLayer: {} with areas: {}".format(player_name, arr))
 
     if dice > 64:
         dice = 64
 
     while dice and areas:
-        area = random.choice(areas)
+        if is_yourself:
+            area = random.choice(areas)
+            while area.dice < 8:
+                area.dice += 1
+                dice -= 1
+        else:
+            area = areas.pop(0)
+            areas.append(area)
+
         if area.dice >= 8:
             areas.remove(area)
-        else:
+        elif not is_yourself:
             if area.name not in affected_areas:
                 affected_areas[area.name] = area.dice
             area.dice += 1
             dice -= 1
+
+    if dice > 0:
+        if is_yourself:
+            areas = board.get_player_border(player_name)
+        else:
+            areas = board.get_player_areas(player_name)
+        while dice and areas:
+            area = random.choice(areas)
+
+            if area.dice >= 8:
+                areas.remove(area)
+            else:
+                if area.name not in affected_areas:
+                    affected_areas[area.name] = area.dice
+                area.dice += 1
+                dice -= 1
 
     try:
         yield
