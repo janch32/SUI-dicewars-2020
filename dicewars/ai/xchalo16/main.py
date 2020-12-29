@@ -3,6 +3,7 @@ import copy
 
 from ..utils import save_state
 from .utils import battle_heuristic, get_attackable, path_heuristics, simulate_battle
+from .maxn import MaxN
 
 from typing import List
 
@@ -25,6 +26,7 @@ class AI:
         self.area_of_interest = None
         self.path_of_interest = None
         self.start_turn = True #TODO DEBUGGING ONLY
+        self.max_n = MaxN(players_order)
 
     def search_tree(self, board : Board, active_area : Area):
 
@@ -67,6 +69,11 @@ class AI:
 
         While there is a lucrative attack possible, the agent will do it. Otherwise it will end its turn.
         """
+
+        move = self.max_n.get_best_move(board, self.player_name)
+        if move == None:
+            return EndTurnCommand()
+        return BattleCommand(move[0].get_name(), move[1].get_name())
 
         start_area = None
         focus_area = None
