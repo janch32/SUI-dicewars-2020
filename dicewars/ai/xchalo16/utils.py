@@ -46,9 +46,19 @@ def simulate_battle(attacker: Area, target: Area, success=True):
 
 
 def player_heuristic(board: Board, player_name: int) -> int:
-    """
+    """Výpočet heuristiky pro hráče podle aktuálního stavu herní plochy.
     koeficient = počet_polí_hlavního_území
+
+    Args
+    ----
+        board (Board): Aktuální stav herní plochy
+        player_name (int): Jméno hráče
+
+    Returns
+    -------
+        int: Výsledná hodnota heuristiky. Větší znamená lepší
     """
+
     score = 0
     regions = board.get_players_regions(player_name)
     for region in regions:
@@ -56,8 +66,18 @@ def player_heuristic(board: Board, player_name: int) -> int:
     return score
 
 def battle_heuristic(board: Board, attacker: Area, target: Area) -> float:
-    """
+    """Výpočet heuristiky potenciální bitvy
     heuristika = pst_úspěchu * koeficient(úspěch) - pst_prohry * koeficient(prohra)
+
+    Args
+    ----
+        board (Board): Aktuální stav herní plochy
+        attacker (Area): Úzení ze kterého se útočí
+        target (Area): Území na které se útočí
+
+    Returns
+    -------
+        float: Výsledná hodnota heuristiky. Větší znamená lepší.
     """
 
     with simulate_battle(attacker, target, success=True):
@@ -105,6 +125,10 @@ def add_dices_to_player(board: Board, player_name: int):
         # Vrátit herní pole do původního stavu
         for name in affected_areas:
             board.get_area(name).dice = affected_areas[name]
+
+# ################################## #
+#  Funkce níže se zatím nepoužívají  #
+# ################################## #
 
 def path_heuristics(board: Board, path: list) -> float:
     """
