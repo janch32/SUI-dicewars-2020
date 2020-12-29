@@ -57,8 +57,7 @@ class MaxN:
         attacks = sorted(attacks, key = lambda x: x[0], reverse=True)
 
         # Z výkonnostních důvodů omezit počet tahů pro další tahy
-        if depth > 0:
-            attacks = attacks[:5]
+        attacks = attacks[:5]
 
         # Provést všechny tahy, rekurzivně pro ně provést protitahy a vybrat
         # tah s nejlepším skóre pro tohoto hráče
@@ -67,7 +66,7 @@ class MaxN:
                 with add_dices_to_player(board, player):
                     new_scores = self.__make_turn(board, (pl_index+1) % self.players, depth+1)
                     # Pokud se skóre rovná, tah je dobrý, pokud ostatní hráči mají skóre nižší
-                    if (new_scores[pl_index] == scores[pl_index]) and (sum(new_scores) >= sum(scores)):
+                    if (new_scores[pl_index] == scores[pl_index]) and (sum(new_scores) > sum(scores)):
                         continue
 
                     if new_scores[pl_index] >= scores[pl_index]:

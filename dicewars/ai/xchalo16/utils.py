@@ -103,7 +103,6 @@ def add_dices_to_player(board: Board, player_name: int):
 
     areas: List[Area] = []
     for area in board.get_player_areas(player_name):
-        dice += area.dice
         areas.append(area)
 
     if dice > 64:
