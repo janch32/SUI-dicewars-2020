@@ -26,7 +26,7 @@ class AI:
         self.area_of_interest = None
         self.path_of_interest = None
         self.start_turn = True #TODO DEBUGGING ONLY
-        self.max_n = MaxN(players_order)
+        self.max_n = MaxN(players_order, 4)
 
     def search_tree(self, board : Board, active_area : Area):
 
