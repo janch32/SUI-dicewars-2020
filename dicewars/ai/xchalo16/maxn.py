@@ -1,8 +1,9 @@
-from ..utils import possible_attacks
-from .utils import add_dice_to_player, battle_heuristic, player_heuristic, simulate_battle
 from typing import List, Tuple, Union
 from dicewars.client.game.board import Board
 from dicewars.client.game.area import Area
+from dicewars.ai.utils import possible_attacks
+
+from .utils import add_dice_to_player, battle_heuristic, player_heuristic, simulate_battle
 
 class MaxN:
     """MiniMax implemenetace pro hru více hráčů (Max^n)
