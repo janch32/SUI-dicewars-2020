@@ -1,5 +1,5 @@
 from ..utils import possible_attacks
-from .utils import add_dices_to_player, battle_heuristic, player_heuristic, simulate_battle
+from .utils import add_dice_to_player, battle_heuristic, player_heuristic, simulate_battle
 from typing import List, Tuple, Union
 from dicewars.client.game.board import Board
 from dicewars.client.game.area import Area
@@ -70,7 +70,7 @@ class MaxN:
         # tah s nejlepším skóre pro tohoto hráče
         for battle_coef, attacker, target in attacks:
             with simulate_battle(attacker, target):
-                with add_dices_to_player(board, player):
+                with add_dice_to_player(board, player):
                     new_scores = self.__make_turn(board, (pl_index+1) % self.players, depth+1)
                     # Pokud se skóre rovná, tah je dobrý, pokud ostatní hráči mají skóre nižší
                     #if (new_scores[pl_index] == scores[pl_index]) and (sum(new_scores) > sum(scores)):

@@ -45,7 +45,7 @@ def simulate_battle(attacker: Area, target: Area, success=True):
         target.owner_name = orig_target_owner
 
 @contextmanager
-def add_dices_to_player(board: Board, player_name: int):
+def add_dice_to_player(board: Board, player_name: int):
     """Vytvoří dočasné herní pole s náhodně přidělenými kostkami pro vybraného
     hráče. Základní logika předělování kostek je převzatá z implemenetace hry
     viz dicewars/server/game.py line:230.
@@ -145,6 +145,70 @@ def battle_heuristic(board: Board, attacker: Area, target: Area) -> float:
 #    Funkce níže se nepoužívají. Jde o pozůstatek z testování různých          #
 #    přístupů při tvorbě AI.                                                   #
 # ############################################################################ #
+
+@contextmanager
+def add_dice_to_player_worst_case(board: Board, player_name: int, is_yourself: bool, logger):
+    affected_areas: Dict[int, int] = {}
+    dice = 0
+    regions = board.get_players_regions(player_name)
+    for region in regions:
+        dice = max(dice, len(region))
+
+    if is_yourself:
+        areas = board.get_player_areas(player_name)
+        b_a = board.get_player_border(player_name)
+        areas = list(set(areas)-set(b_a))
+        if areas is None:
+            areas = b_a
+    else:
+        areas =  board.get_player_border(player_name)
+
+    arr = [a.get_name() for a in areas]
+    logger.info("PLayer: {} with areas: {}".format(player_name, arr))
+
+    if dice > 64:
+        dice = 64
+
+    while dice and areas:
+        if is_yourself:
+            area = random.choice(areas)
+            while area.dice < 8:
+                area.dice += 1
+                dice -= 1
+        else:
+            area = areas.pop(0)
+            areas.append(area)
+
+        if area.dice >= 8:
+            areas.remove(area)
+        elif not is_yourself:
+            if area.name not in affected_areas:
+                affected_areas[area.name] = area.dice
+            area.dice += 1
+            dice -= 1
+
+    if dice > 0:
+        if is_yourself:
+            areas = board.get_player_border(player_name)
+        else:
+            areas = board.get_player_areas(player_name)
+        while dice and areas:
+            area = random.choice(areas)
+
+            if area.dice >= 8:
+                areas.remove(area)
+            else:
+                if area.name not in affected_areas:
+                    affected_areas[area.name] = area.dice
+                area.dice += 1
+                dice -= 1
+
+    try:
+        yield
+    finally:
+        # Vrátit herní pole do původního stavu
+        for name in affected_areas:
+            board.get_area(name).dice = affected_areas[name]
 
 def path_heuristics(board: Board, path: list) -> float:
     """
